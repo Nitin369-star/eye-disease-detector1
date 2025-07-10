@@ -1,0 +1,7 @@
+0 normal 
+1 glaucoma
+2 diabetic_retinopathy
+3 cataract
+4 AMD 
+5  Papilledema
+6 Pseudopapilledema

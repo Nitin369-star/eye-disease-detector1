@@ -1,0 +1,13 @@
+streamlit
+keras
+numpy
+pillow
+deep_translator
+requests
+pyttsx3
+whisper
+openai
+streamlit-mic-recorder
+fpdf
+streamlit-webrtc
+opencv-python
