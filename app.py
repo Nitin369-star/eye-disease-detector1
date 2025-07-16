@@ -88,7 +88,7 @@ def capture_webcam_image():
             img = ctx.video_processor.frame
             if img is not None:
                 image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                st.image(image, caption="🖼️ कैप्चर की गई इमेज" if language == "Hindi" else "🖼️ Captured Image", use_container_width=True)
+                st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
                 return image
     return None
 
@@ -353,7 +353,7 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         image = capture_webcam_image()
 
     if image:
-        st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", use_container_width=True)
+        st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
         selected, confidence, info = predict_image(image)
         img_resized = image.resize((224, 224))
         img_array = np.asarray(img_resized) / 255.0
@@ -371,7 +371,7 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         gradcam_image = overlay_heatmap_on_image(image, heatmap)
 
 # 📸 Display Grad-CAM image
-        st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap (Model Focus)", use_container_width=True)
+        st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         phone = st.session_state.get("phone", "")
         email = st.session_state.get("email", "")
@@ -502,7 +502,7 @@ elif (input_mode == "Multiple Images (Batch)" and language == "English") or (inp
 
             # 🖼️ Display Images
             st.image(image, caption=f"🖼️ {file.name}", use_container_width=True)
-            st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap", use_container_width=True)
+            st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
 
             # 🧠 Prediction Info
             st.write(f"🩺 **Prediction:** {selected}" if language == "English" else f"🩺 **भविष्यवाणी:** {selected}")
