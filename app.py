@@ -95,7 +95,7 @@ def capture_webcam_image():
 # ----------------------------
 # 📦 Load Model and Labels
 # ----------------------------
-model = load_model("keras_Model.h5", compile=False)
+model = load_model("keras_model.h5", compile=False)
 
 class_names = open("labels.txt", "r").readlines()
 
