@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(page_title="Eye Disease Detector", layout="centered")
 from tensorflow.keras.models import load_model
 from PIL import Image, ImageOps
 import numpy as np
