@@ -13,3 +13,4 @@ opencv-python
 streamlit-mic-recorder
 streamlit-webrtc
 whisper
+matplotlib==3.8.4
