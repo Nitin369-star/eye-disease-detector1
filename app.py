@@ -313,7 +313,11 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
 
     image = None
     if (input_method == "Upload from device" and language == "English") or (input_method == "डिवाइस से अपलोड करें" and language == "Hindi"):
-        uploaded_file = st.file_uploader("📥 Upload Retina Image" if language == "English" else "📥 रेटिना इमेज अपलोड करें", type=["jpg", "jpeg", "png"])
+        uploaded_file = st.file_uploader(
+          "📥 Upload Retina Image" if language == "English" else "📥 रेटिना इमेज अपलोड करें", 
+          type=["jpg", "jpeg", "png"],
+          key="single_upload"
+       )   
         if uploaded_file is not None:
             image = Image.open(uploaded_file).convert("RGB")
     elif (input_method == "Capture with webcam (demo)" and language == "English") or (input_method == "वेबकैम से कैप्चर करें" and language == "Hindi"):
@@ -412,8 +416,10 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
 # ----------------------------
 elif (input_mode == "Multiple Images (Batch)" and language == "English") or (input_mode == "एकाधिक इमेज (बैच)" and language == "Hindi"):
     uploaded_files = st.file_uploader(
-        "📥 Upload Retina Images (Multiple)" if language == "English" else "📥 रेटिना इमेज अपलोड करें (एकाधिक)",
-        type=["jpg", "jpeg", "png"], accept_multiple_files=True
+      "📥 Upload Retina Images (Multiple)" if language == "English" else "📥 रेटिना इमेज अपलोड करें (एकाधिक)",
+      type=["jpg", "jpeg", "png"], 
+      accept_multiple_files=True,
+      key="batch_upload"
     )
     if uploaded_files:
         st.markdown("### 🔍 Batch Prediction Results" if language == "English" else "### 🔍 बैच भविष्यवाणी परिणाम")
