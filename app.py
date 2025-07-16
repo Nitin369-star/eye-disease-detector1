@@ -93,11 +93,25 @@ def capture_webcam_image():
     return None
 
 # ----------------------------
+# ----------------------------
 # 📦 Load Model and Labels
 # ----------------------------
-model = load_model("keras_model.h5", compile=False)
 
+# Load the full model
+model = load_model("keras_model.h5")
+
+# Extract MobileNetV2 feature extractor
+feature_model = model.get_layer("sequential_1").get_layer("model1")
+
+# Extract classifier head
+classifier_head = model.get_layer("sequential_3")
+
+# This is the last conv layer in MobileNetV2
+last_conv_layer_name = "Conv_1"
+
+# Load class names
 class_names = open("labels.txt", "r").readlines()
+
 
 # ----------------------------
 # 📚 Disease Info
@@ -270,25 +284,40 @@ def predict_image(image):
     info = disease_info.get(selected, {"desc": "No info available", "treat": "N/A"})
     return selected, confidence, info
 
-def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
+def make_gradcam_heatmap(img_array, feature_model, classifier_head, last_conv_layer_name, pred_index=None):
+    # Create a model that maps input to last conv layer and feature output
     grad_model = tf.keras.models.Model(
-        [model.inputs], 
-        [model.get_layer(last_conv_layer_name).output, model.output]
+        inputs=feature_model.input,
+        outputs=[
+            feature_model.get_layer(last_conv_layer_name).output,
+            feature_model.output  # This gives (1, 7, 7, 1280)
+        ]
     )
 
     with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(img_array)
+        conv_outputs, conv_features = grad_model(img_array)
+        tape.watch(conv_outputs)
+
+        # 🟡 Apply Global Average Pooling before classifier
+        gap_features = tf.reduce_mean(conv_outputs, axis=[1, 2])  # -> (1, 1280)
+
+        predictions = classifier_head(gap_features)
+
         if pred_index is None:
             pred_index = tf.argmax(predictions[0])
         class_channel = predictions[:, pred_index]
 
+    # Compute gradients
     grads = tape.gradient(class_channel, conv_outputs)
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+
     conv_outputs = conv_outputs[0]
     heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
     heatmap = tf.squeeze(heatmap)
-    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+
+    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap + 1e-10)
     return heatmap.numpy()
+
 
 def overlay_heatmap_on_image(img_pil, heatmap, alpha=0.4):
     heatmap = np.uint8(255 * heatmap)
@@ -331,7 +360,14 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         img_array = np.expand_dims(img_array, axis=0)
 
 # 🔥 Generate Grad-CAM heatmap
-        heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name="model1")  # Replace with your actual last conv layer name
+        heatmap = make_gradcam_heatmap(
+         img_array,
+         feature_model=feature_model,
+         classifier_head=classifier_head,
+         last_conv_layer_name="Conv_1"
+        )
+
+# Replace with your actual last conv layer name
         gradcam_image = overlay_heatmap_on_image(image, heatmap)
 
 # 📸 Display Grad-CAM image
@@ -432,7 +468,15 @@ elif (input_mode == "Multiple Images (Batch)" and language == "English") or (inp
             img_resized = image.resize((224, 224))
             img_array = np.asarray(img_resized) / 255.0
             img_array = np.expand_dims(img_array, axis=0)
-            heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name="model1")
+            heatmap = make_gradcam_heatmap(
+             img_array,
+             feature_model=feature_model,
+             classifier_head=classifier_head,
+             last_conv_layer_name="Conv_1"
+            )
+
+
+            
             gradcam_image = overlay_heatmap_on_image(image, heatmap)
 
             # ✅ SAVE to CSV
