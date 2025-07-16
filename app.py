@@ -50,16 +50,16 @@ def get_location():
 language = st.sidebar.radio("🌍 Choose Language / भाषा चुनें", ["English", "Hindi"])
 
 # ----------------------------
-# 🎯 App Config & Title
+# ----------------------------# ----------------------------
+# 🎯 App Title & Caption
 # ----------------------------
 if language == "Hindi":
-    st.set_page_config(page_title="आंख की बीमारी डिटेक्टर", layout="centered")
     st.title("🧠 आंख की बीमारी डिटेक्टर")
     st.caption("📸 रेटिना इमेज अपलोड करें → 🧠 बीमारी पहचानें → 💊 उपचार सलाह प्राप्त करें")
 else:
-    st.set_page_config(page_title="Eye Disease Detector", layout="centered")
     st.title("🧠 Eye Disease Detector")
     st.caption("📸 Upload retina image → 🧠 Detect disease → 💊 Get treatment advice")
+
 
 # ----------------------------
 # 📤 Sidebar File Uploader
