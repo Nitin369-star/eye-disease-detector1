@@ -74,7 +74,7 @@ else:
 # ----------------------------
 def capture_webcam_image():
     class VideoProcessor(VideoTransformerBase):
-        def __init__(self):
+        def _init_(self):
             self.frame = None
 
         def transform(self, frame):
@@ -88,7 +88,7 @@ def capture_webcam_image():
             img = ctx.video_processor.frame
             if img is not None:
                 image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
+                st.image(image, caption="🖼 कैप्चर की गई इमेज" if language == "Hindi" else "🖼 Captured Image", use_container_width=True)
                 return image
     return None
 
@@ -252,7 +252,7 @@ def generate_pdf(patient_name, patient_age, image, predictions, lang="English", 
 # 🚀 Main App Logic
 # ----------------------------
 st.markdown("---")
-st.header("🖼️ Retina Image Input" if language == "English" else "🖼️ रेटिना इमेज इनपुट")
+st.header("🖼 Retina Image Input" if language == "English" else "🖼 रेटिना इमेज इनपुट")
 input_mode = st.radio(
     "Select Input Mode:" if language == "English" else "इनपुट मोड चुनें:",
     ["Single Image" if language == "English" else "एकल इमेज",
@@ -353,7 +353,7 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         image = capture_webcam_image()
 
     if image:
-        st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
+        st.image(image, caption="🖼 Input Image" if language == "English" else "🖼 इनपुट इमेज", use_container_width=True)
         selected, confidence, info = predict_image(image)
         img_resized = image.resize((224, 224))
         img_array = np.asarray(img_resized) / 255.0
@@ -371,7 +371,7 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         gradcam_image = overlay_heatmap_on_image(image, heatmap)
 
 # 📸 Display Grad-CAM image
-        st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
+        st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap (Model Focus)", use_container_width=True)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         phone = st.session_state.get("phone", "")
         email = st.session_state.get("email", "")
@@ -418,8 +418,8 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
 
         with tab1:
             st.subheader("🔍 Prediction Result" if language == "English" else "🔍 भविष्यवाणी परिणाम")
-            st.write(f"🩺 **Detected Disease:** {selected}" if language == "English" else f"🩺 **पहचानी गई बीमारी:** {selected}")
-            st.write(f"📊 **Confidence:** {confidence:.2%}" if language == "English" else f"📊 **विश्वास स्तर:** {confidence:.2%}")
+            st.write(f"🩺 *Detected Disease:* {selected}" if language == "English" else f"🩺 *पहचानी गई बीमारी:* {selected}")
+            st.write(f"📊 *Confidence:* {confidence:.2%}" if language == "English" else f"📊 *विश्वास स्तर:* {confidence:.2%}")
         with tab2:
             st.subheader("🧠 Disease Explanation" if language == "English" else "🧠 बीमारी की व्याख्या")
             if language == "English":
@@ -452,34 +452,42 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
 # ----------------------------
 elif (input_mode == "Multiple Images (Batch)" and language == "English") or (input_mode == "एकाधिक इमेज (बैच)" and language == "Hindi"):
     uploaded_files = st.file_uploader(
-      "📥 Upload Retina Images (Multiple)" if language == "English" else "📥 रेटिना इमेज अपलोड करें (एकाधिक)",
-      type=["jpg", "jpeg", "png"], 
-      accept_multiple_files=True,
-      key="batch_upload"
+        "📥 Upload Retina Images (Multiple)" if language == "English" else "📥 रेटिना इमेज अपलोड करें (एकाधिक)",
+        type=["jpg", "jpeg", "png"],
+        accept_multiple_files=True,
+        key="batch_upload"
     )
+    
     if uploaded_files:
         st.markdown("### 🔍 Batch Prediction Results" if language == "English" else "### 🔍 बैच भविष्यवाणी परिणाम")
         records = []
+
         for i, file in enumerate(uploaded_files):
-            image = Image.open(file).convert("RGB")
+            filename = getattr(file, "name", f"Image_{i+1}")
+
+            try:
+                image = Image.open(file).convert("RGB")
+            except Exception as e:
+                st.warning(f"❌ Could not open image {filename}. Error: {e}")
+                continue
+
+            # 🔮 Prediction
             selected, confidence, info = predict_image(image)
 
-            # 🔥 Grad-CAM Heatmap generation
+            # 🔥 Grad-CAM Heatmap
             img_resized = image.resize((224, 224))
             img_array = np.asarray(img_resized) / 255.0
             img_array = np.expand_dims(img_array, axis=0)
+
             heatmap = make_gradcam_heatmap(
-             img_array,
-             feature_model=feature_model,
-             classifier_head=classifier_head,
-             last_conv_layer_name="Conv_1"
+                img_array,
+                feature_model=feature_model,
+                classifier_head=classifier_head,
+                last_conv_layer_name="Conv_1"
             )
-
-
-            
             gradcam_image = overlay_heatmap_on_image(image, heatmap)
 
-            # ✅ SAVE to CSV
+            # 🗂 Save to CSV
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             record = {
                 "Timestamp": timestamp,
@@ -495,26 +503,27 @@ elif (input_mode == "Multiple Images (Batch)" and language == "English") or (inp
             df_existing = pd.concat([df_existing, pd.DataFrame([record])], ignore_index=True)
             df_existing.to_csv(RECORDS_FILE, index=False)
 
-            # 🌐 Translation for Hindi
+            # 🌐 Translation
+            translated_desc, translated_treat = info['desc'], info['treat']
             if language == "Hindi":
                 translated_desc = translate_text(info['desc'])
                 translated_treat = translate_text(info['treat'])
 
-            # 🖼️ Display Images
-            st.image(image, caption=f"🖼️ {file.name}", use_container_width=True)
-            st.image(image, caption="🖼️ Input Image" if language == "English" else "🖼️ इनपुट इमेज", width=600)
+            # 🖼 Show Images (no use_container_width for Streamlit Cloud!)
+            try:
+                st.image(image, caption=f"🖼 {filename}")
+                st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap")
+            except Exception as e:
+                st.warning(f"⚠ Could not display image {filename}. Error: {e}")
 
-            # 🧠 Prediction Info
-            st.write(f"🩺 **Prediction:** {selected}" if language == "English" else f"🩺 **भविष्यवाणी:** {selected}")
-            st.write(f"📊 **Confidence:** {confidence:.2%}" if language == "English" else f"📊 **विश्वास स्तर:** {confidence:.2%}")
-            st.write(f"📌 **Description:** {info['desc']}" if language == "English" else f"📌 **विवरण:** {translated_desc}")
-            st.write(f"💊 **Treatment:** {info['treat']}" if language == "English" else f"💊 **उपचार:** {translated_treat}")
+            # 🧠 Show Prediction
+            st.write(f"🩺 *Prediction:* {selected}" if language == "English" else f"🩺 *भविष्यवाणी:* {selected}")
+            st.write(f"📊 *Confidence:* {confidence:.2%}" if language == "English" else f"📊 *विश्वास स्तर:* {confidence:.2%}")
+            st.write(f"📌 *Description:* {info['desc']}" if language == "English" else f"📌 *विवरण:* {translated_desc}")
+            st.write(f"💊 *Treatment:* {info['treat']}" if language == "English" else f"💊 *उपचार:* {translated_treat}")
 
-            # 📄 Generate PDF Button
-            if st.button(
-                f"📄 Generate PDF for {file.name}" if language == "English" else f"📄 {file.name} के लिए पीडीएफ बनाएं",
-                key=f"pdf_{i}"
-            ):
+            # 📄 PDF Download
+            if st.button(f"📄 Generate PDF for {filename}" if language == "English" else f"📄 {filename} के लिए पीडीएफ बनाएं", key=f"pdf_{i}"):
                 st.session_state["timestamp"] = timestamp
                 desc = info['desc'] if language == "English" else translated_desc
                 treat = info['treat'] if language == "English" else translated_treat
@@ -523,18 +532,22 @@ elif (input_mode == "Multiple Images (Batch)" and language == "English") or (inp
 
                 with open(pdf_path, "rb") as f:
                     base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-                    href = f'<a href="data:application/octet-stream;base64,{base64_pdf}" download="Report_{file.name}.pdf">📥 Download Report</a>'
+                    href = f'<a href="data:application/octet-stream;base64,{base64_pdf}" download="Report_{filename}.pdf">📥 Download Report</a>'
                     st.markdown(href, unsafe_allow_html=True)
                 os.remove(pdf_path)
-             # 📋 For summary table
+
+            # 📋 Table
             records.append({
-                "Image" if language == "English" else "इमेज": file.name,
+                "Image" if language == "English" else "इमेज": filename,
                 "Prediction" if language == "English" else "भविष्यवाणी": selected,
                 "Confidence" if language == "English" else "विश्वास स्तर": f"{confidence:.2%}"
             })
 
+        # ✅ Display Summary Table
         st.markdown("### 📊 Summary Table" if language == "English" else "### 📊 सारांश तालिका")
         st.dataframe(records)
+
+
 # ----------------------------
 # 📂 Patient Prediction History Viewer
 # ----------------------------
@@ -587,8 +600,8 @@ st.markdown("---")
 st.header("💬 Ask About Eye Diseases (Voice Assistant)" if language == "English" else "💬 आंख की बीमारियों के बारे में पूछें (वॉयस असिस्टेंट)")
 
 audio = mic_recorder(
-    start_prompt="🎙️ Click to Record" if language == "English" else "🎙️ रिकॉर्ड करने के लिए क्लिक करें",
-    stop_prompt="⏹️ Stop Recording" if language == "English" else "⏹️ रिकॉर्डिंग रोकें",
+    start_prompt="🎙 Click to Record" if language == "English" else "🎙 रिकॉर्ड करने के लिए क्लिक करें",
+    stop_prompt="⏹ Stop Recording" if language == "English" else "⏹ रिकॉर्डिंग रोकें",
     key="voice"
 )
 
