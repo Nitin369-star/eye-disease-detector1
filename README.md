@@ -12,10 +12,12 @@ An intelligent deep learning web app that can detect **Retina Diseases** from re
 
 | Upload Image Mode | Prediction with Heatmap |
 |-------------------|--------------------------|
-| ![Upload Mode](<img width="1726" height="851" alt="image" src="https://github.com/user-attachments/assets/164315bf-cbd1-4c9d-a594-f1b2886468dd" />
-) | ![Prediction](<img width="1327" height="875" alt="image" src="https://github.com/user-attachments/assets/808446d9-be13-4f61-8729-25f47c0b8467" />
-) | ![Uploading image.png…](<img width="530" height="870" alt="image" src="https://github.com/user-attachments/assets/cee1d8a9-2f30-462f-bfc8-0049f7f7dc1b" /> | ![live location](<img width="1194" height="805" alt="image" src="https://github.com/user-attachments/assets/a8a6327b-2471-4bbd-ab23-ee235f7f0a10" />)
-)
+| ![Upload Mode](https://github.com/user-attachments/assets/164315bf-cbd1-4c9d-a594-f1b2886468dd) | ![Prediction](https://github.com/user-attachments/assets/808446d9-be13-4f61-8729-25f47c0b8467) |
+
+| Batch Upload | Live Location |
+|--------------|----------------|
+| ![Batch](https://github.com/user-attachments/assets/cee1d8a9-2f30-462f-bfc8-0049f7f7dc1b) | ![Live Location](https://github.com/user-attachments/assets/a8a6327b-2471-4bbd-ab23-ee235f7f0a10) |
+
 
 
 ---
