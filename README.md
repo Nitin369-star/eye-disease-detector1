@@ -16,7 +16,7 @@ An intelligent deep learning web app that can detect **Retina Diseases** from re
 ) | ![Prediction](<img width="1327" height="875" alt="image" src="https://github.com/user-attachments/assets/808446d9-be13-4f61-8729-25f47c0b8467" />
 ) |
 
-(Add more screenshots as needed in `screenshots/` folder)![Uploading image.png…](<img width="530" height="870" alt="image" src="https://github.com/user-attachments/assets/cee1d8a9-2f30-462f-bfc8-0049f7f7dc1b" /> |![Upload Mode](<img width="1194" height="805" alt="image" src="https://github.com/user-attachments/assets/a8a6327b-2471-4bbd-ab23-ee235f7f0a10" />
+(Add more screenshots as needed in `screenshots/` folder)![Uploading image.png…](<img width="530" height="870" alt="image" src="https://github.com/user-attachments/assets/cee1d8a9-2f30-462f-bfc8-0049f7f7dc1b" /> |![live location](<img width="1194" height="805" alt="image" src="https://github.com/user-attachments/assets/a8a6327b-2471-4bbd-ab23-ee235f7f0a10" />
 )
 )
 
