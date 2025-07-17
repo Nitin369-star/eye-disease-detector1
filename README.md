@@ -1,9 +1,20 @@
 # 🧠 EyeScope AI - Retina Disease Detector
 
-[![Streamlit App](https://img.shields.io/badge/Live%20App-Open-green?style=for-the-badge&logo=streamlit)](https://eye-disease-detector1-369.streamlit.app/)
 [![Python](https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=python)](https://www.python.org/downloads/release/python-3100/)
 
 An intelligent deep learning web app that can detect **Retina Diseases** from retinal fundus images using a pre-trained CNN model and Grad-CAM heatmaps for visual explainability.
+
+> ⚠️ Note: Live deployment on Streamlit Cloud is currently under maintenance due to compatibility issues. Please refer to the screenshots below for a demo.
+
+---
+
+## 📸 Screenshots
+
+| Upload Image Mode | Prediction with Heatmap |
+|-------------------|--------------------------|
+| ![Upload Mode](screenshots/upload_ui.png) | ![Prediction](screenshots/prediction_result.png) |
+
+(Add more screenshots as needed in `screenshots/` folder)
 
 ---
 
@@ -63,12 +74,6 @@ An intelligent deep learning web app that can detect **Retina Diseases** from re
 
 ---
 
-## 🚀 Live Demo
-
-🔗 **Try it now:** [eye-disease-detector1-369.streamlit.app](https://eye-disease-detector1-369.streamlit.app/)
-
----
-
 ## 🧪 Model Details
 
 - Input Shape: `224x224x3`
@@ -85,3 +90,5 @@ An intelligent deep learning web app that can detect **Retina Diseases** from re
 ```bash
 git clone https://github.com/Nitin369-star/eye-disease-detector1.git
 cd eye-disease-detector1
+pip install -r requirements.txt
+streamlit run app.py
