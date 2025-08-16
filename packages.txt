@@ -1,0 +1,10 @@
+# Required for OpenCV (cv2)
+libgl1-mesa-glx
+libglib2.0-0
+
+# Required for Whisper + audio processing
+ffmpeg
+portaudio19-dev
+
+# Speech synthesis (pyttsx3 may need it)
+espeak

@@ -1,0 +1,43 @@
+# Ignore virtual environments
+keras310-env/
+tm-env/
+
+# Ignore Streamlit secrets
+.streamlit/secrets.toml
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore dataset folders
+train/
+test/
+
+# Ignore images/videos/audio
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+*.mp4
+*.avi
+*.wav
+*.mp3
+
+# Ignore model checkpoints except final h5
+*.h5
+!keras_model.h5
+
+# Python cache & env
+__pycache__/
+*.pyc
+.venv/
+env/
+venv/
+.env
+
+
+
+
+
