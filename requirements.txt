@@ -1,18 +1,28 @@
 streamlit==1.35.0
+
+# ML / AI
 tensorflow==2.15.0
 keras==2.15.0
 numpy>=1.23
 pandas
+scikit-learn
+
+# Image / CV
 Pillow>=9.0
 matplotlib
-scikit-learn
+opencv-python-headless
+
+# NLP / Translation
 deep-translator
+openai>=1.0.0
+openai-whisper
+
+# Utilities
 requests
 pyttsx3
 fpdf
 qrcode
-opencv-python-headless
+
+# Streamlit extras
 streamlit-mic-recorder
 streamlit-webrtc
-openai-whisper
-
