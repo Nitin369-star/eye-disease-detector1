@@ -1,40 +1,29 @@
-# 👁️ Eye Disease Detector AI  
-![Streamlit](https://img.shields.io/badge/Made%20with-Streamlit-FF4B4B?logo=streamlit&logoColor=white)  
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00?logo=tensorflow&logoColor=white)  
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)  
-![License](https://img.shields.io/badge/License-MIT-green)  
+# 👁️ Eye Disease Detector  
 
-🔬 An **AI-powered Retina Disease Detection System** that uses **Deep Learning** to classify eye conditions from retina images.  
-Built with **Streamlit + TensorFlow + OpenCV** and enhanced with **voice, translation & hospital suggestions**.  
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)  
+![Streamlit](https://img.shields.io/badge/Streamlit-App-red?logo=streamlit)  
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-orange?logo=tensorflow)  
+![License: MIT](https://img.shields.io/badge/License-MIT-green)  
+![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen)  
 
----
+An AI-powered web application that detects **eye diseases** from retinal images using **Deep Learning**.  
+Built with **Streamlit**, **TensorFlow/Keras**, and **Computer Vision**, this app aims to assist in early detection of eye disorders.  
 
-## ✨ Highlights  
-
-✅ Upload or capture retina images via webcam  
-✅ Detects **eye diseases** using trained CNN model  
-✅ **Multilingual support** with `deep-translator` 🌍  
-✅ **Voice feedback** 🔊 (`pyttsx3`)  
-✅ Generate **PDF Reports & QR Codes** 📝  
-✅ Nearby **Hospital recommendations** 🏥  
-✅ Runs on **Streamlit Cloud / Localhost** ⚡  
+🔗 **Live Demo**: [Eye Disease Detector](https://eye-disease-detector1-369.streamlit.app/)  
 
 ---
 
-## 🖥️ Tech Stack  
+## ✨ Features  
 
-- **Frontend:** Streamlit, Streamlit-webrtc, Streamlit-mic-recorder  
-- **Backend:** TensorFlow, Keras, OpenCV  
-- **Extras:** Deep Translator, Pyttsx3, QRCode, FPDF  
+-  **AI Disease Prediction** – Upload retinal images for instant predictions  
+-  **Training Metrics** – Visualized accuracy, loss & confusion matrix  
+-  **Voice Feedback** – Audio feedback with `pyttsx3`  
+-  **Multi-language Support** – Translate results with `deep-translator`  
+-  **Webcam Capture** – Capture retina scans directly  
+-  **Patient Record Management** – Saves reports in `patient_records.csv`  
+-  **Simple & Interactive UI** – Powered by **Streamlit**  
 
 ---
 
-## 📂 Project Structure  
 
-```bash
-eye-disease-detector/
-│── app.py                 # 🎯 Main Streamlit app
-│── model/                 # 🧠 Trained ML/DL models
-│── requirements.txt       # 📦 Dependencies
-│── assets/                # 🎨 Icons, images
-│── README.md              # 📘 Documentation
+
