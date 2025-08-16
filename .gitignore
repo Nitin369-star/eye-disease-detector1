@@ -17,7 +17,6 @@ test/
 # Ignore images/videos/audio
 *.jpg
 *.jpeg
-*.png
 *.bmp
 *.gif
 *.mp4
