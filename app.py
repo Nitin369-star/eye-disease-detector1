@@ -596,6 +596,13 @@ else:
 # 💬 Voice Assistant
 # ----------------------------
 
+from gtts import gTTS
+import io
+import tempfile
+import os
+import whisper
+from streamlit_mic_recorder import mic_recorder
+
 faq_answers = {
     "glaucoma": "Glaucoma is a group of eye conditions that damage the optic nerve. It often has no early symptoms. Regular eye exams and medications can manage it.",
     "diabetic": "Diabetic retinopathy is caused by long-term diabetes. It damages blood vessels in the retina and can be managed with laser treatment and injections.",
@@ -609,6 +616,7 @@ faq_answers = {
     "eye": "Please specify the eye disease for more information. For example: glaucoma, cataract, AMD, etc.",
     "default": "Sorry, I couldn't understand your question. Try asking about a specific eye disease like 'What is glaucoma?'"
 }
+
 st.markdown("---")
 st.header("💬 Ask About Eye Diseases (Voice Assistant)" if language == "English" else "💬 आंख की बीमारियों के बारे में पूछें (वॉयस असिस्टेंट)")
 
@@ -642,10 +650,14 @@ if audio:
     st.markdown("### 🤖 Assistant's Answer:" if language == "English" else "### 🤖 असिस्टेंट का उत्तर:")
     st.write(answer)
 
-    engine = pyttsx3.init()
-    engine.setProperty('rate', 150)
-    engine.say(answer)
-    engine.runAndWait()
+    # ==== gTTS SPEECH OUTPUT ====
+    tts = gTTS(answer, lang="en")
+    audio_bytes = io.BytesIO()
+    tts.write_to_fp(audio_bytes)
+
+    st.audio(audio_bytes.getvalue(), format="audio/mp3")
+
     os.remove(tmp_audio_path)
+
 else:
     st.info("Click the mic and ask your eye disease question." if language == "English" else "माइक पर क्लिक करें और अपनी आंख की बीमारी का प्रश्न पूछें।")
