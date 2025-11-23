@@ -547,17 +547,7 @@ elif (input_mode == "Multiple Images (Batch)" and language == "English") or (inp
         st.markdown("### 📊 Summary Table" if language == "English" else "### 📊 सारांश तालिका")
         st.dataframe(records)
         
-# At the end of batch mode, maybe after the summary table
-st.markdown("### 📊 Model Performance Metrics")
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.image("confusion_matrix.png", caption="Confusion Matrix")
-    st.image("loss_curve.png", caption="Loss Curve")
-
-with col2:
-    st.image("accuracy_curve.png", caption="Accuracy Curve")
 
 
 
