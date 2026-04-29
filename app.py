@@ -22,6 +22,12 @@ import io
 from fpdf import FPDF
 import qrcode
 import pandas as pd
+import os
+import datetime
+import base64
+import matplotlib.pyplot as plt
+import tensorflow as tf
+import matplotlib.cm as cm
 
 # Mic (optional but safe)
 from streamlit_mic_recorder import mic_recorder
@@ -89,8 +95,11 @@ def capture_webcam_image():
 # ----------------------------
 
 # Load the full model
-model = load_model("keras_model.h5")
+@st.cache_resource
+def load_my_model():
+    return load_model("keras_model.h5")
 
+model = load_my_model()
 # Extract MobileNetV2 feature extractor
 feature_model = model.get_layer("sequential_1").get_layer("model1")
 
@@ -547,8 +556,10 @@ elif (input_mode == "Multiple Images (Batch)" and language == "English") or (inp
 # ----------------------------
 st.markdown("---")
 st.header("📂 Prediction History" if language == "English" else "📂 भविष्यवाणी इतिहास")
-
-df = pd.read_csv(RECORDS_FILE)
+try:
+    df = pd.read_csv(RECORDS_FILE)
+except:
+    df = pd.DataFrame(columns=["Timestamp", "Name", "Age", "Phone", "Email", "Disease", "Confidence"])
 
 if df.empty:
     st.info("No records found.")
@@ -576,12 +587,6 @@ else:
 # ----------------------------
 #  Voice Assistant
 
-from gtts import gTTS
-import io
-import tempfile
-import os
-import streamlit as st
-from streamlit_mic_recorder import mic_recorder
 
 # ===== FAQ DATA =====
 faq_answers = {
