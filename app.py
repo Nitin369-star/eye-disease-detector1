@@ -1,37 +1,41 @@
 import streamlit as st
 st.set_page_config(page_title="Eye Disease Detector", layout="centered")
+
+# ML / Model
 from tensorflow.keras.models import load_model
-from PIL import Image, ImageOps
 import numpy as np
+
+# Image processing
+from PIL import Image, ImageOps
+
+# Translation
 from deep_translator import GoogleTranslator
+
+# API / utils
 import requests
-import pyttsx3
-import whisper
-from streamlit_mic_recorder import mic_recorder
-import tempfile
-import base64
-import os
+
+# Audio (safe)
+from gtts import gTTS
+import io
+
+# Optional features (safe)
 from fpdf import FPDF
 import qrcode
-import cv2
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
-import datetime
-import openai
-from openai import OpenAI
-import tensorflow as tf
-import matplotlib.cm as cm 
-import matplotlib.pyplot as plt
 import pandas as pd
+
+# Mic (optional but safe)
+from streamlit_mic_recorder import mic_recorder
+
+# Constants
 
 RECORDS_FILE = "patient_records.csv"
 
-# ✅ Initialize CSV if missing or empty
 if not os.path.exists(RECORDS_FILE) or os.stat(RECORDS_FILE).st_size == 0:
     df = pd.DataFrame(columns=["Timestamp", "Name", "Age", "Phone", "Email", "Disease", "Confidence"])
     df.to_csv(RECORDS_FILE, index=False)
 
 
-# 🌍 Get User Location
+
 def get_location():
     try:
         ip_info = requests.get("https://ipinfo.io").json()
@@ -45,13 +49,13 @@ def get_location():
 
 
 # ----------------------------
-# 🌐 Language Selector
+#  Language Selector
 # ----------------------------
 language = st.sidebar.radio("🌍 Choose Language / भाषा चुनें", ["English", "Hindi"])
 
 # ----------------------------
 # ----------------------------# ----------------------------
-# 🎯 App Title & Caption
+#  App Title & Caption
 # ----------------------------
 if language == "Hindi":
     st.title("🧠 आंख की बीमारी डिटेक्टर")
@@ -62,7 +66,7 @@ else:
 
 
 # ----------------------------
-# 📤 Sidebar File Uploader
+# Sidebar File Uploader
 # ----------------------------
 if language == "Hindi":
     uploaded_file = st.sidebar.file_uploader("📥 रेटिना इमेज अपलोड करें", type=["jpg", "jpeg", "png"])
@@ -70,7 +74,7 @@ else:
     uploaded_file = st.sidebar.file_uploader("📥 Upload Retina Image", type=["jpg", "jpeg", "png"])
 
 # ----------------------------
-# 📷 Webcam Capture Tab
+# Webcam Capture Tab
 # ----------------------------
 def capture_webcam_image():
     class VideoProcessor(VideoTransformerBase):
@@ -94,7 +98,7 @@ def capture_webcam_image():
 
 # ----------------------------
 # ----------------------------
-# 📦 Load Model and Labels
+#  Load Model and Labels
 # ----------------------------
 
 # Load the full model
@@ -114,7 +118,7 @@ class_names = open("labels.txt", "r").readlines()
 
 
 # ----------------------------
-# 📚 Disease Info
+#  Disease Info
 # ----------------------------
 disease_info = {
     "Normal": {
@@ -154,7 +158,7 @@ def translate_text(text):
         return text
 
 # ----------------------------
-# 📄 PDF Generator
+#  PDF Generator
 # ----------------------------
 def generate_pdf(patient_name, patient_age, image, predictions, lang="English", qr_type="info", gradcam_image=None):
     pdf = FPDF()
@@ -298,7 +302,7 @@ def make_gradcam_heatmap(img_array, feature_model, classifier_head, last_conv_la
         conv_outputs, conv_features = grad_model(img_array)
         tape.watch(conv_outputs)
 
-        # 🟡 Apply Global Average Pooling before classifier
+        #  Apply Global Average Pooling before classifier
         gap_features = tf.reduce_mean(conv_outputs, axis=[1, 2])  # -> (1, 1280)
 
         predictions = classifier_head(gap_features)
@@ -583,16 +587,16 @@ else:
     st.download_button("📥 Download CSV", csv, "patient_records.csv", "text/csv")
 
 # ----------------------------
-# 💬 Voice Assistant
-# ----------------------------
+#  Voice Assistant
 
 from gtts import gTTS
 import io
 import tempfile
 import os
-import whisper
+import streamlit as st
 from streamlit_mic_recorder import mic_recorder
 
+# ===== FAQ DATA =====
 faq_answers = {
     "glaucoma": "Glaucoma is a group of eye conditions that damage the optic nerve. It often has no early symptoms. Regular eye exams and medications can manage it.",
     "diabetic": "Diabetic retinopathy is caused by long-term diabetes. It damages blood vessels in the retina and can be managed with laser treatment and injections.",
@@ -607,30 +611,31 @@ faq_answers = {
     "default": "Sorry, I couldn't understand your question. Try asking about a specific eye disease like 'What is glaucoma?'"
 }
 
+# ===== UI =====
 st.markdown("---")
 st.header("💬 Ask About Eye Diseases (Voice Assistant)" if language == "English" else "💬 आंख की बीमारियों के बारे में पूछें (वॉयस असिस्टेंट)")
 
+# ===== MIC INPUT (NO TRANSCRIPTION) =====
 audio = mic_recorder(
     start_prompt="🎙 Click to Record" if language == "English" else "🎙 रिकॉर्ड करने के लिए क्लिक करें",
     stop_prompt="⏹ Stop Recording" if language == "English" else "⏹ रिकॉर्डिंग रोकें",
     key="voice"
 )
 
-if audio:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_audio:
-        tmp_audio.write(audio["bytes"])
-        tmp_audio_path = tmp_audio.name
+# ===== TEXT INPUT (MAIN INPUT NOW) =====
+question = st.text_input(
+    "Type your question here:" if language == "English" else "अपना प्रश्न यहां लिखें:"
+)
 
+# ===== HANDLE AUDIO (OPTIONAL PLAYBACK ONLY) =====
+if audio:
     st.audio(audio["bytes"], format="audio/wav")
 
-    with st.spinner("🧠 Transcribing..." if language == "English" else "🧠 ट्रांसक्राइब किया जा रहा है..."):
-        model_whisper = whisper.load_model("base")
-        result = model_whisper.transcribe(tmp_audio_path)
-        question = result["text"]
+# ===== PROCESS QUESTION =====
+if question:
+    st.success(f"🔊 You asked: {question}" if language == "English" else f"🔊 आपने पूछा: {question}")
 
-    st.success(f"🔊 You said: {question}" if language == "English" else f"🔊 आपने कहा: {question}")
-
-    # ==== LOCAL FAQ LOGIC ====
+    # ==== FAQ LOGIC ====
     answer = faq_answers["default"]
     for keyword in faq_answers:
         if keyword != "default" and keyword in question.lower():
@@ -640,14 +645,13 @@ if audio:
     st.markdown("### 🤖 Assistant's Answer:" if language == "English" else "### 🤖 असिस्टेंट का उत्तर:")
     st.write(answer)
 
-    # ==== gTTS SPEECH OUTPUT ====
+    # ==== gTTS OUTPUT ====
     tts = gTTS(answer, lang="en")
     audio_bytes = io.BytesIO()
     tts.write_to_fp(audio_bytes)
 
     st.audio(audio_bytes.getvalue(), format="audio/mp3")
 
-    os.remove(tmp_audio_path)
-
 else:
-    st.info("Click the mic and ask your eye disease question." if language == "English" else "माइक पर क्लिक करें और अपनी आंख की बीमारी का प्रश्न पूछें।")
+    st.info("Type or record your question about an eye disease." if language == "English" else "अपना प्रश्न टाइप करें या रिकॉर्ड करें।")
+
