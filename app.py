@@ -353,7 +353,7 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         image = capture_webcam_image()
 
     if image:
-        st.image(image, caption="🖼 Input Image" if language == "English" else "🖼 इनपुट इमेज", use_container_width=True)
+        st.image(image, caption="🖼 Input Image" if language == "English" else "🖼 इनपुट इमेज", use_column_width=True)
         selected, confidence, info = predict_image(image)
         img_resized = image.resize((224, 224))
         img_array = np.asarray(img_resized) / 255.0
@@ -371,7 +371,7 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         gradcam_image = overlay_heatmap_on_image(image, heatmap)
 
 # 📸 Display Grad-CAM image
-        st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap (Model Focus)", use_container_width=True)
+        st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap (Model Focus)", use_column_width=True)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         phone = st.session_state.get("phone", "")
         email = st.session_state.get("email", "")
