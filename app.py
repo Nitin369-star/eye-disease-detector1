@@ -334,10 +334,8 @@ def overlay_heatmap_on_image(img_pil, heatmap, alpha=0.4):
 # 📸 SINGLE IMAGE MODE (FIXED)
 # ----------------------------
 # ----------------------------
-# 📸 SINGLE IMAGE MODE (FIXED)
 # ----------------------------
-# ----------------------------
-# 📸 SINGLE IMAGE MODE (FINAL FIX)
+# 📸 SINGLE IMAGE MODE (FINAL STABLE)
 # ----------------------------
 if (input_mode == "Single Image" and language == "English") or \
    (input_mode == "एकल इमेज" and language == "Hindi"):
@@ -350,21 +348,23 @@ if (input_mode == "Single Image" and language == "English") or \
         ]
     )
 
-    image = None
+    # 🔐 Persist image in session
+    if "single_image" not in st.session_state:
+        st.session_state.single_image = None
 
     # 📥 Upload
     if (input_method == "Upload from device" and language == "English") or \
        (input_method == "डिवाइस से अपलोड करें" and language == "Hindi"):
 
         uploaded_file = st.file_uploader(
-            "📥 Upload Retina Image" if language == "English" else "📥 रेटिना इमेज अपलोड करें",
+            "📥 Upload Retina Image",
             type=["jpg", "jpeg", "png"],
             key="single_upload"
         )
 
         if uploaded_file is not None:
             try:
-                image = Image.open(uploaded_file).convert("RGB")
+                st.session_state.single_image = Image.open(uploaded_file).convert("RGB")
             except Exception as e:
                 st.error(f"❌ Error loading image: {e}")
                 st.stop()
@@ -372,12 +372,17 @@ if (input_mode == "Single Image" and language == "English") or \
     elif (input_method == "Capture with webcam (demo)" and language == "English") or \
          (input_method == "वेबकैम से कैप्चर करें" and language == "Hindi"):
 
-        image = capture_webcam_image()
+        st.session_state.single_image = capture_webcam_image()
+
+    # 🎯 Explicit run button (CRUCIAL FIX)
+    run_btn = st.button("🚀 Run Detection")
 
     # ----------------------------
-    # ✅ MAIN BLOCK (like batch)
+    # ✅ MAIN EXECUTION
     # ----------------------------
-    if image is not None:
+    if run_btn and st.session_state.single_image is not None:
+
+        image = st.session_state.single_image
 
         # Show image
         st.image(image, caption="🖼 Input Image")
@@ -385,7 +390,7 @@ if (input_mode == "Single Image" and language == "English") or \
         # 🔮 Prediction
         selected, confidence, info = predict_image(image)
 
-        # 🔥 Grad-CAM prep
+        # 🔥 Prepare Grad-CAM input
         img_resized = image.resize((224, 224))
         img_array = np.asarray(img_resized) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
@@ -398,6 +403,7 @@ if (input_mode == "Single Image" and language == "English") or \
                 classifier_head=classifier_head,
                 last_conv_layer_name="Conv_1"
             )
+
             gradcam_image = overlay_heatmap_on_image(image, heatmap)
             st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap")
 
@@ -405,9 +411,7 @@ if (input_mode == "Single Image" and language == "English") or \
             st.warning(f"⚠ Grad-CAM failed: {e}")
             gradcam_image = None
 
-        # ----------------------------
-        # 🗂 Save to CSV
-        # ----------------------------
+        # 🗂 Save record
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         record = {
@@ -424,28 +428,19 @@ if (input_mode == "Single Image" and language == "English") or \
         df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
         df.to_csv(RECORDS_FILE, index=False)
 
-        # ----------------------------
         # 🌐 Translation
-        # ----------------------------
         if language == "Hindi":
             translated_desc = translate_text(info['desc'])
             translated_treat = translate_text(info['treat'])
 
-        # ----------------------------
         # 📊 Tabs
-        # ----------------------------
-        tab1, tab2 = st.tabs([
-            "🔍 Prediction" if language == "English" else "🔍 भविष्यवाणी",
-            "📌 Explanation" if language == "English" else "📌 व्याख्या"
-        ])
+        tab1, tab2 = st.tabs(["🔍 Prediction", "📌 Explanation"])
 
         with tab1:
-            st.subheader("🔍 Prediction Result")
-            st.write(f"🩺 Detected Disease: {selected}")
+            st.write(f"🩺 Disease: {selected}")
             st.write(f"📊 Confidence: {confidence:.2%}")
 
         with tab2:
-            st.subheader("🧠 Disease Explanation")
             if language == "English":
                 st.write(info['desc'])
                 st.write(info['treat'])
@@ -453,26 +448,8 @@ if (input_mode == "Single Image" and language == "English") or \
                 st.write(translated_desc)
                 st.write(translated_treat)
 
-        # ----------------------------
-        # 📍 Nearby Hospitals
-        # ----------------------------
-        st.markdown("---")
-        st.subheader("🏥 Nearby Eye Hospitals")
-
-        lat, lon = get_location()
-        if lat and lon:
-            maps_url = f"https://www.google.com/maps?q=eye+hospital+near+{lat},{lon}&output=embed"
-            st.components.v1.html(
-                f'<iframe width="100%" height="400" src="{maps_url}"></iframe>',
-                height=400
-            )
-        else:
-            st.warning("📍 Unable to detect location.")
-
-        # ----------------------------
         # 📄 PDF
-        # ----------------------------
-        if st.button("📄 Generate PDF Report"):
+        if st.button("📄 Generate PDF"):
             pdf_path = generate_pdf(
                 patient_name,
                 patient_age,
@@ -484,8 +461,10 @@ if (input_mode == "Single Image" and language == "English") or \
 
             with open(pdf_path, "rb") as f:
                 base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-                href = f'<a href="data:application/octet-stream;base64,{base64_pdf}" download="Eye_Report.pdf">📥 Download Report</a>'
-                st.markdown(href, unsafe_allow_html=True)
+                st.markdown(
+                    f'<a href="data:application/octet-stream;base64,{base64_pdf}" download="Eye_Report.pdf">📥 Download Report</a>',
+                    unsafe_allow_html=True
+                )
 
             os.remove(pdf_path)
 # ----------------------------
