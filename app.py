@@ -337,66 +337,42 @@ def overlay_heatmap_on_image(img_pil, heatmap, alpha=0.4):
 # ----------------------------
 # 📸 SINGLE IMAGE MODE (FINAL STABLE)
 # ----------------------------
+# 📸 SINGLE IMAGE MODE (BATCH-LIKE FIX)
+# ----------------------------
 if (input_mode == "Single Image" and language == "English") or \
    (input_mode == "एकल इमेज" and language == "Hindi"):
 
-    input_method = st.radio(
-        "📷 Select Image Input Method" if language == "English" else "📷 इमेज इनपुट विधि चुनें",
-        [
-            "Upload from device" if language == "English" else "डिवाइस से अपलोड करें",
-            "Capture with webcam (demo)" if language == "English" else "वेबकैम से कैप्चर करें"
-        ]
+    uploaded_file = st.file_uploader(
+        "📥 Upload Retina Image",
+        type=["jpg", "jpeg", "png"],
+        key="single_upload"
     )
 
-    # 🔐 Persist image in session
-    if "single_image" not in st.session_state:
-        st.session_state.single_image = None
+    if uploaded_file is not None:
 
-    # 📥 Upload
-    if (input_method == "Upload from device" and language == "English") or \
-       (input_method == "डिवाइस से अपलोड करें" and language == "Hindi"):
+        # 🔹 Step 1: Load image
+        try:
+            image = Image.open(uploaded_file).convert("RGB")
+        except Exception as e:
+            st.error(f"❌ Could not open image: {e}")
+            st.stop()
 
-        uploaded_file = st.file_uploader(
-            "📥 Upload Retina Image",
-            type=["jpg", "jpeg", "png"],
-            key="single_upload"
-        )
-
-        if uploaded_file is not None:
-            try:
-                st.session_state.single_image = Image.open(uploaded_file).convert("RGB")
-            except Exception as e:
-                st.error(f"❌ Error loading image: {e}")
-                st.stop()
-
-    elif (input_method == "Capture with webcam (demo)" and language == "English") or \
-         (input_method == "वेबकैम से कैप्चर करें" and language == "Hindi"):
-
-        st.session_state.single_image = capture_webcam_image()
-
-    # 🎯 Explicit run button (CRUCIAL FIX)
-    run_btn = st.button("🚀 Run Detection")
-
-    # ----------------------------
-    # ✅ MAIN EXECUTION
-    # ----------------------------
-    if run_btn and st.session_state.single_image is not None:
-
-        image = st.session_state.single_image
-
-        # Show image
+        # 🔹 Step 2: Show image
         st.image(image, caption="🖼 Input Image")
 
-        # 🔮 Prediction
-        selected, confidence, info = predict_image(image)
-
-        # 🔥 Prepare Grad-CAM input
-        img_resized = image.resize((224, 224))
-        img_array = np.asarray(img_resized) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
-
-        # 🔥 Grad-CAM
+        # 🔹 Step 3: Prediction
         try:
+            selected, confidence, info = predict_image(image)
+        except Exception as e:
+            st.error(f"❌ Prediction failed: {e}")
+            st.stop()
+
+        # 🔹 Step 4: Grad-CAM (same as batch)
+        try:
+            img_resized = image.resize((224, 224))
+            img_array = np.asarray(img_resized) / 255.0
+            img_array = np.expand_dims(img_array, axis=0)
+
             heatmap = make_gradcam_heatmap(
                 img_array,
                 feature_model=feature_model,
@@ -411,7 +387,7 @@ if (input_mode == "Single Image" and language == "English") or \
             st.warning(f"⚠ Grad-CAM failed: {e}")
             gradcam_image = None
 
-        # 🗂 Save record
+        # 🔹 Step 5: Save to CSV (same as batch)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         record = {
@@ -424,32 +400,28 @@ if (input_mode == "Single Image" and language == "English") or \
             "Confidence": round(confidence * 100, 2)
         }
 
-        df = pd.read_csv(RECORDS_FILE)
-        df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
-        df.to_csv(RECORDS_FILE, index=False)
+        df_existing = pd.read_csv(RECORDS_FILE)
+        df_existing = pd.concat([df_existing, pd.DataFrame([record])], ignore_index=True)
+        df_existing.to_csv(RECORDS_FILE, index=False)
 
-        # 🌐 Translation
+        # 🔹 Step 6: Translation
         if language == "Hindi":
             translated_desc = translate_text(info['desc'])
             translated_treat = translate_text(info['treat'])
 
-        # 📊 Tabs
-        tab1, tab2 = st.tabs(["🔍 Prediction", "📌 Explanation"])
+        # 🔹 Step 7: Show results
+        st.write(f"🩺 Disease: {selected}")
+        st.write(f"📊 Confidence: {confidence:.2%}")
 
-        with tab1:
-            st.write(f"🩺 Disease: {selected}")
-            st.write(f"📊 Confidence: {confidence:.2%}")
+        if language == "English":
+            st.write(info['desc'])
+            st.write(info['treat'])
+        else:
+            st.write(translated_desc)
+            st.write(translated_treat)
 
-        with tab2:
-            if language == "English":
-                st.write(info['desc'])
-                st.write(info['treat'])
-            else:
-                st.write(translated_desc)
-                st.write(translated_treat)
-
-        # 📄 PDF
-        if st.button("📄 Generate PDF"):
+        # 🔹 Step 8: PDF
+        if st.button("📄 Generate PDF Report"):
             pdf_path = generate_pdf(
                 patient_name,
                 patient_age,
@@ -462,7 +434,7 @@ if (input_mode == "Single Image" and language == "English") or \
             with open(pdf_path, "rb") as f:
                 base64_pdf = base64.b64encode(f.read()).decode('utf-8')
                 st.markdown(
-                    f'<a href="data:application/octet-stream;base64,{base64_pdf}" download="Eye_Report.pdf">📥 Download Report</a>',
+                    f'<a href="data:application/octet-stream;base64,{base64_pdf}" download="Eye_Report.pdf">📥 Download</a>',
                     unsafe_allow_html=True
                 )
 
