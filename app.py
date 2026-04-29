@@ -333,6 +333,9 @@ def overlay_heatmap_on_image(img_pil, heatmap, alpha=0.4):
 # ----------------------------
 # 📸 SINGLE IMAGE MODE (FIXED)
 # ----------------------------
+# ----------------------------
+# 📸 SINGLE IMAGE MODE (FIXED)
+# ----------------------------
 if (input_mode == "Single Image" and language == "English") or (input_mode == "एकल इमेज" and language == "Hindi"):
 
     input_method = st.radio(
@@ -362,48 +365,87 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
                 st.error(f"❌ Error loading image: {e}")
                 st.stop()
 
-# 🔥 Generate Grad-CAM heatmap
-        heatmap = make_gradcam_heatmap(
-         img_array,
-         feature_model=feature_model,
-         classifier_head=classifier_head,
-         last_conv_layer_name="Conv_1"
-        )
+    elif (input_method == "Capture with webcam (demo)" and language == "English") or \
+         (input_method == "वेबकैम से कैप्चर करें" and language == "Hindi"):
 
-# Replace with your actual last conv layer name
-        gradcam_image = overlay_heatmap_on_image(image, heatmap)
+        image = capture_webcam_image()
 
-# 📸 Display Grad-CAM image
-        st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap (Model Focus)", use_column_width=True)
+    # ----------------------------
+    # ✅ MAIN SAFE BLOCK
+    # ----------------------------
+    if image is not None:
+
+        # Show image
+        st.image(image, caption="🖼 Input Image", use_column_width=True)
+
+        # 🔮 Prediction
+        try:
+            selected, confidence, info = predict_image(image)
+        except Exception as e:
+            st.error(f"❌ Prediction error: {e}")
+            st.stop()
+
+        # 🧠 Prepare input for Grad-CAM
+        img_resized = image.resize((224, 224))
+        img_array = np.asarray(img_resized) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
+
+        # 🔥 Grad-CAM (safe)
+        try:
+            heatmap = make_gradcam_heatmap(
+                img_array,
+                feature_model=feature_model,
+                classifier_head=classifier_head,
+                last_conv_layer_name="Conv_1"
+            )
+
+            gradcam_image = overlay_heatmap_on_image(image, heatmap)
+
+            st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap", use_column_width=True)
+
+        except Exception as e:
+            st.warning(f"⚠ Grad-CAM failed: {e}")
+            gradcam_image = None  # important fallback
+
+        # ----------------------------
+        # 🗂 Save to CSV
+        # ----------------------------
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         phone = st.session_state.get("phone", "")
         email = st.session_state.get("email", "")
 
-        # Append prediction to CSV
         record = {
-           "Timestamp": timestamp,
-           "Name": patient_name,
-           "Age": patient_age,
-           "Phone": phone,
-           "Email": email,
-           "Disease": selected,
-           "Confidence": round(confidence * 100, 2)
-         }
+            "Timestamp": timestamp,
+            "Name": patient_name,
+            "Age": patient_age,
+            "Phone": phone,
+            "Email": email,
+            "Disease": selected,
+            "Confidence": round(confidence * 100, 2)
+        }
 
         df = pd.read_csv(RECORDS_FILE)
         df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
         df.to_csv(RECORDS_FILE, index=False)
 
-
+        # ----------------------------
+        # 🌐 Translation
+        # ----------------------------
         if language == "Hindi":
             translated_desc = translate_text(info['desc'])
             translated_treat = translate_text(info['treat'])
 
+        # ----------------------------
+        # 📊 Tabs
+        # ----------------------------
         tab1, tab2 = st.tabs([
             "🔍 Prediction" if language == "English" else "🔍 भविष्यवाणी",
             "📌 Explanation" if language == "English" else "📌 व्याख्या"
         ])
-        # 📍 Show Nearby Eye Hospitals Using Location
+
+        # ----------------------------
+        # 📍 Nearby Hospitals
+        # ----------------------------
         st.markdown("---")
         st.subheader("🏥 Nearby Eye Hospitals" if language == "English" else "🏥 पास के नेत्र अस्पताल")
 
@@ -411,43 +453,50 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         if lat and lon:
             maps_url = f"https://www.google.com/maps?q=eye+hospital+near+{lat},{lon}&output=embed"
             st.components.v1.html(f"""
-            <iframe width="100%" height="400"
-            src="{maps_url}">
-             </iframe>
+                <iframe width="100%" height="400" src="{maps_url}"></iframe>
             """, height=400)
         else:
-             st.warning("📍 Unable to detect location. Please check your connection or VPN." if language == "English"
-               else "📍 स्थान का पता नहीं चल सका। कृपया अपना कनेक्शन या वीपीएन जांचें।")
+            st.warning("📍 Unable to detect location." if language == "English"
+                       else "📍 स्थान का पता नहीं चल सका।")
 
+        # ----------------------------
+        # 📊 Prediction Tab
+        # ----------------------------
         with tab1:
-            st.subheader("🔍 Prediction Result" if language == "English" else "🔍 भविष्यवाणी परिणाम")
-            st.write(f"🩺 *Detected Disease:* {selected}" if language == "English" else f"🩺 *पहचानी गई बीमारी:* {selected}")
-            st.write(f"📊 *Confidence:* {confidence:.2%}" if language == "English" else f"📊 *विश्वास स्तर:* {confidence:.2%}")
-        with tab2:
-            st.subheader("🧠 Disease Explanation" if language == "English" else "🧠 बीमारी की व्याख्या")
-            if language == "English":
-                st.write(f"📌 {info['desc']}")
-                st.write(f"💊 {info['treat']}")
-            else:
-                st.write(f"📌 {translated_desc}")
-                st.write(f"💊 {translated_treat}")
+            st.subheader("🔍 Prediction Result")
+            st.write(f"🩺 Detected Disease: {selected}")
+            st.write(f"📊 Confidence: {confidence:.2%}")
 
-        if st.button("📄 Generate PDF Report" if language == "English" else "📄 पीडीएफ रिपोर्ट बनाएं"):
-            st.session_state["timestamp"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            desc = info['desc'] if language == "English" else translated_desc
-            treat = info['treat'] if language == "English" else translated_treat
+        # ----------------------------
+        # 📌 Explanation Tab
+        # ----------------------------
+        with tab2:
+            st.subheader("🧠 Disease Explanation")
+            if language == "English":
+                st.write(info['desc'])
+                st.write(info['treat'])
+            else:
+                st.write(translated_desc)
+                st.write(translated_treat)
+
+        # ----------------------------
+        # 📄 PDF
+        # ----------------------------
+        if st.button("📄 Generate PDF Report"):
             pdf_path = generate_pdf(
-               patient_name, 
-               patient_age, 
-               image, 
-               [{"disease": selected, "confidence": confidence}],  # 👈 wrap as list of dicts
-               lang=language,
-               gradcam_image=gradcam_image
+                patient_name,
+                patient_age,
+                image,
+                [{"disease": selected, "confidence": confidence}],
+                lang=language,
+                gradcam_image=gradcam_image
             )
+
             with open(pdf_path, "rb") as f:
                 base64_pdf = base64.b64encode(f.read()).decode('utf-8')
                 href = f'<a href="data:application/octet-stream;base64,{base64_pdf}" download="Eye_Report.pdf">📥 Download Report</a>'
                 st.markdown(href, unsafe_allow_html=True)
+
             os.remove(pdf_path)
 
 # ----------------------------
