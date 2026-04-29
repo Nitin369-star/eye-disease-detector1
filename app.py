@@ -331,33 +331,36 @@ def overlay_heatmap_on_image(img_pil, heatmap, alpha=0.4):
 
 
 # ----------------------------
-# 📸 SINGLE IMAGE MODE
+# 📸 SINGLE IMAGE MODE (FIXED)
 # ----------------------------
 if (input_mode == "Single Image" and language == "English") or (input_mode == "एकल इमेज" and language == "Hindi"):
+
     input_method = st.radio(
         "📷 Select Image Input Method" if language == "English" else "📷 इमेज इनपुट विधि चुनें",
-        ["Upload from device" if language == "English" else "डिवाइस से अपलोड करें",
-         "Capture with webcam (demo)" if language == "English" else "वेबकैम से कैप्चर करें"]
+        [
+            "Upload from device" if language == "English" else "डिवाइस से अपलोड करें",
+            "Capture with webcam (demo)" if language == "English" else "वेबकैम से कैप्चर करें"
+        ]
     )
 
     image = None
-    if (input_method == "Upload from device" and language == "English") or (input_method == "डिवाइस से अपलोड करें" and language == "Hindi"):
-        uploaded_file = st.file_uploader(
-          "📥 Upload Retina Image" if language == "English" else "📥 रेटिना इमेज अपलोड करें", 
-          type=["jpg", "jpeg", "png"],
-          key="single_upload"
-       )   
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file).convert("RGB")
-    elif (input_method == "Capture with webcam (demo)" and language == "English") or (input_method == "वेबकैम से कैप्चर करें" and language == "Hindi"):
-        image = capture_webcam_image()
 
-    if image:
-        st.image(image, caption="🖼 Input Image" if language == "English" else "🖼 इनपुट इमेज", use_column_width=True)
-        selected, confidence, info = predict_image(image)
-        img_resized = image.resize((224, 224))
-        img_array = np.asarray(img_resized) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+    # 📥 Upload
+    if (input_method == "Upload from device" and language == "English") or \
+       (input_method == "डिवाइस से अपलोड करें" and language == "Hindi"):
+
+        uploaded_file = st.file_uploader(
+            "📥 Upload Retina Image" if language == "English" else "📥 रेटिना इमेज अपलोड करें",
+            type=["jpg", "jpeg", "png"],
+            key="single_upload"
+        )
+
+        if uploaded_file is not None:
+            try:
+                image = Image.open(uploaded_file).convert("RGB")
+            except Exception as e:
+                st.error(f"❌ Error loading image: {e}")
+                st.stop()
 
 # 🔥 Generate Grad-CAM heatmap
         heatmap = make_gradcam_heatmap(
