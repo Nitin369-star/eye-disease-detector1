@@ -336,7 +336,11 @@ def overlay_heatmap_on_image(img_pil, heatmap, alpha=0.4):
 # ----------------------------
 # 📸 SINGLE IMAGE MODE (FIXED)
 # ----------------------------
-if (input_mode == "Single Image" and language == "English") or (input_mode == "एकल इमेज" and language == "Hindi"):
+# ----------------------------
+# 📸 SINGLE IMAGE MODE (FINAL FIX)
+# ----------------------------
+if (input_mode == "Single Image" and language == "English") or \
+   (input_mode == "एकल इमेज" and language == "Hindi"):
 
     input_method = st.radio(
         "📷 Select Image Input Method" if language == "English" else "📷 इमेज इनपुट विधि चुनें",
@@ -371,26 +375,22 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
         image = capture_webcam_image()
 
     # ----------------------------
-    # ✅ MAIN SAFE BLOCK
+    # ✅ MAIN BLOCK (like batch)
     # ----------------------------
     if image is not None:
 
         # Show image
-        st.image(image, caption="🖼 Input Image", use_column_width=True)
+        st.image(image, caption="🖼 Input Image")
 
         # 🔮 Prediction
-        try:
-            selected, confidence, info = predict_image(image)
-        except Exception as e:
-            st.error(f"❌ Prediction error: {e}")
-            st.stop()
+        selected, confidence, info = predict_image(image)
 
-        # 🧠 Prepare input for Grad-CAM
+        # 🔥 Grad-CAM prep
         img_resized = image.resize((224, 224))
         img_array = np.asarray(img_resized) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
-        # 🔥 Grad-CAM (safe)
+        # 🔥 Grad-CAM
         try:
             heatmap = make_gradcam_heatmap(
                 img_array,
@@ -398,28 +398,24 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
                 classifier_head=classifier_head,
                 last_conv_layer_name="Conv_1"
             )
-
             gradcam_image = overlay_heatmap_on_image(image, heatmap)
-
-            st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap", use_column_width=True)
+            st.image(gradcam_image, caption="🔥 Grad-CAM Heatmap")
 
         except Exception as e:
             st.warning(f"⚠ Grad-CAM failed: {e}")
-            gradcam_image = None  # important fallback
+            gradcam_image = None
 
         # ----------------------------
         # 🗂 Save to CSV
         # ----------------------------
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        phone = st.session_state.get("phone", "")
-        email = st.session_state.get("email", "")
 
         record = {
             "Timestamp": timestamp,
             "Name": patient_name,
             "Age": patient_age,
-            "Phone": phone,
-            "Email": email,
+            "Phone": st.session_state.get("phone", ""),
+            "Email": st.session_state.get("email", ""),
             "Disease": selected,
             "Confidence": round(confidence * 100, 2)
         }
@@ -443,33 +439,11 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
             "📌 Explanation" if language == "English" else "📌 व्याख्या"
         ])
 
-        # ----------------------------
-        # 📍 Nearby Hospitals
-        # ----------------------------
-        st.markdown("---")
-        st.subheader("🏥 Nearby Eye Hospitals" if language == "English" else "🏥 पास के नेत्र अस्पताल")
-
-        lat, lon = get_location()
-        if lat and lon:
-            maps_url = f"https://www.google.com/maps?q=eye+hospital+near+{lat},{lon}&output=embed"
-            st.components.v1.html(f"""
-                <iframe width="100%" height="400" src="{maps_url}"></iframe>
-            """, height=400)
-        else:
-            st.warning("📍 Unable to detect location." if language == "English"
-                       else "📍 स्थान का पता नहीं चल सका।")
-
-        # ----------------------------
-        # 📊 Prediction Tab
-        # ----------------------------
         with tab1:
             st.subheader("🔍 Prediction Result")
             st.write(f"🩺 Detected Disease: {selected}")
             st.write(f"📊 Confidence: {confidence:.2%}")
 
-        # ----------------------------
-        # 📌 Explanation Tab
-        # ----------------------------
         with tab2:
             st.subheader("🧠 Disease Explanation")
             if language == "English":
@@ -478,6 +452,22 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
             else:
                 st.write(translated_desc)
                 st.write(translated_treat)
+
+        # ----------------------------
+        # 📍 Nearby Hospitals
+        # ----------------------------
+        st.markdown("---")
+        st.subheader("🏥 Nearby Eye Hospitals")
+
+        lat, lon = get_location()
+        if lat and lon:
+            maps_url = f"https://www.google.com/maps?q=eye+hospital+near+{lat},{lon}&output=embed"
+            st.components.v1.html(
+                f'<iframe width="100%" height="400" src="{maps_url}"></iframe>',
+                height=400
+            )
+        else:
+            st.warning("📍 Unable to detect location.")
 
         # ----------------------------
         # 📄 PDF
@@ -498,7 +488,6 @@ if (input_mode == "Single Image" and language == "English") or (input_mode == "�
                 st.markdown(href, unsafe_allow_html=True)
 
             os.remove(pdf_path)
-
 # ----------------------------
 # 📦 BATCH MODE
 # ----------------------------
