@@ -76,25 +76,12 @@ else:
 # ----------------------------
 # Webcam Capture Tab
 # ----------------------------
+# 📷 WEBCAM (DISABLED SAFELY)
+# =============================
 def capture_webcam_image():
-    class VideoProcessor(VideoTransformerBase):
-        def _init_(self):
-            self.frame = None
-
-        def transform(self, frame):
-            self.frame = frame.to_ndarray(format="bgr24")
-            return self.frame
-
-    ctx = webrtc_streamer(key="example", video_processor_factory=VideoProcessor)
-    if ctx.video_processor:
-        btn_label = "📸 फ्रेम कैप्चर करें" if language == "Hindi" else "📸 Capture Frame"
-        if st.button(btn_label):
-            img = ctx.video_processor.frame
-            if img is not None:
-                image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                st.image(image, caption="🖼 कैप्चर की गई इमेज" if language == "Hindi" else "🖼 Captured Image", use_container_width=True)
-                return image
+    st.warning("⚠ Webcam disabled in deployed version.")
     return None
+
 
 # ----------------------------
 # ----------------------------
